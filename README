@@ -1,0 +1,1 @@
+- Mọi phản hồi từ server (trừ phản hồi với các file / file tĩnh trong public) đều là ServerResponse trong 

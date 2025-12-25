@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <title>User</title>
+        <link rel="stylesheet" href="user.css">
+        <link rel="stylesheet" href="user-information-function.css">
+        <link rel="stylesheet" href="user-room-list.css">
+        <link rel="stylesheet" href="user-chat.css">
+        <link rel="stylesheet" href="../utils/popUp/popUp.css">
+        <link rel="icon" href="../image/webpage-icon.png">
+
+        <script src="user.js" defer type="module"></script>
+
+        <script src="../utils/popUp/popUp.js" type="module" defer></script>
+        <script src="../utils/jwt.js" type="module"></script>
+        <script src="../utils/cookie-parse.js" type="module"></script>
+        <script src="../utils/responseHandler.js" type="module"></script>
+        <script src="../utils/types.mjs" type="module"></script>
+
+        <script src="userInformation.js" type="module" defer></script>
+        <script src="room-list.mjs" type="module" defer></script>
+        <script src="chat-app.js" type="module" defer></script>
+        <script src="socket.js" type="module" defer></script>
+        <script src="member.js" type="module" defer></script>
+        <script src="file.js" type="module" defer></script>
+    </head>
+    <body class="flex-center" >
+        <div class="user-frame">
+            <div class="user-function">
+                <h1>Đoạn Chat</h1>
+                <div>
+                    <img src="../image/user-userInformation.png" class="user-information-image" alt="User Information" title="User Information">
+                    <img src="../image/user-new-room.png" class="new-room" alt="New Room" title="New Room">
+                </div>
+            </div>
+            <div class="search-bar" contenteditable="true">
+                <img src="../image/user-search.png" alt="Search">
+                <input type="text" placeholder="Nhập Tên Phòng Bạn Muốn Tìm Kiếm">
+            </div>
+            <div class="room-list">
+            </div>
+        </div>
+        <div class="chat-frame">
+
+            <div class="top-bar">
+                <div class="">
+                    <h1 class="room-name"></h1>
+                    <img src="../image/user-room-more-information.png" alt="" class="get-room-information">
+                </div>
+            </div>
+
+            <div class="message-frame">
+                
+            </div>
+
+            <form action="" class="send-bar">
+                <img src="../image/chat-attach-file.png" class="attach-file-img" alt="">
+                <input type="file" name="attach">
+                <textarea name="message" id="" rows="1" placeholder="Nhập tin nhắn bạn muốn gửi"></textarea>
+                <button type="button"></button>
+            </form>
+
+        </div>
+    </body>
+</html>

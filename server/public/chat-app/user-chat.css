@@ -1,0 +1,222 @@
+.chat-frame {
+    height: 87vh;
+    padding-top: 10vh;
+    width: 59vw;
+    border-radius: 15px;
+    background-color: var(--white);
+    display: flex;
+    flex-direction: column;
+}
+
+.top-bar {
+    height: 10vh;
+    width: 59vw;
+    /* border-radius: 20px; */
+    position: fixed;
+    z-index: 1;
+    transform: translateY(-10vh);
+    overflow: hidden;
+}
+.top-bar > div {
+    width: 92%;
+    padding-left: 5%;
+    padding-right: 3%;
+    height: calc(10vh - 4px);
+    box-shadow: 0px 0px 4px var(--shadow-dark);
+    display: flex;
+    align-items: center;
+}
+.top-bar > div > h1{
+    font-size: 2.5vw;
+    margin: 0px;
+    flex-grow: 11;
+}
+.top-bar > div > img{
+    padding: 5px;
+    height: 4vh;
+    width: 4vh;
+    object-fit: contain;
+    border-radius: 100%;
+    cursor: pointer;
+}
+.top-bar img:hover{
+    background-color: var(--gray-hover);
+}
+
+.message-frame{
+    max-height: 77vh;
+    flex-grow: 1;
+    overflow-y: scroll;
+}
+
+.loading-message-icon{
+    width: calc(1.5vw + 2.5vh);
+    height: calc(1.5vw + 2.5vh);
+    animation: loading-message 0.6s linear 0s infinite forwards;
+    background-color: transparent;
+    position: absolute;
+    align-self: center;
+}
+
+.message-card{
+    display: flex;
+    padding: 3px 10px 3px 10px;
+}
+.message-card > div {
+    max-width: 23vw;
+    padding: 5px 1vw 5px 1vw;
+    width: fit-content;
+    border-radius: 10px;
+}
+.message-card > div > h3 {
+    font-size: 15px;
+}
+.message-card > div > h3, 
+.message-card > div > p{
+    margin: 3px 0px;
+}
+.message-card a{
+    display: block;
+    text-decoration: none;
+    margin-bottom: 5px;
+}
+.message-card a > div {
+    background-color: white;
+    width: auto;
+    max-width: inherit;
+    height: fit-content;
+    display: flex;
+    border-radius: 10px;
+    padding: 3px;
+}
+.message-card a > div > img {
+    width: calc(2vw + 2.5vh);
+    height: calc(2vw + 2.5vh);
+    object-fit: contain;
+    margin-right: 5px;
+}
+.message-card a > div > div {
+    max-width: 80%;
+    overflow: hidden;
+}
+.message-card a > div > div > p {
+    font-size: calc(0.5vw + 1vh);
+    font-weight: 600;
+    width: 90%;
+    white-space: nowrap;
+    color: black;
+}
+
+.current-attach-file-card {
+    background-color: white;
+    width: fit-content;
+    max-width: 400px;
+    height: fit-content;
+    display: flex;
+    justify-content: flex-start;
+    border-radius: 10px;
+    padding: 3px;
+    border: 2px solid black;
+    margin-left: 10px;
+}
+.current-attach-file-card > .file-icon {
+    width: calc(2vw + 2.5vh);
+    height: calc(2vw + 2.5vh);
+    object-fit: contain;
+    margin-right: 10px;
+}
+.current-attach-file-card > div {
+    width: fit-content;
+    max-width: 70%;
+}
+.current-attach-file-card > div > p {
+    white-space: nowrap;
+    overflow: hidden;
+    font-size: calc(0.5vw + 1vh);
+    font-weight: 600;
+    width: 100%;
+    white-space: nowrap;
+    color: black;
+}
+.current-attach-file-card > .remove-file-icon {
+    width: calc(1vw + 1.5vh);
+    height: calc(1vw + 1.5vh);
+    object-fit: contain;
+    margin-left: 13px;
+    cursor: pointer;
+}
+
+.sender{
+    justify-content: end;
+}
+.sender > div{
+    background-color: var(--sender-background-color);
+    color: white;
+}
+
+.receiver > div{
+    background-color: var(--gray);
+}
+
+.send-bar{
+    padding: 10px 10px 10px 10px;
+    height: fit-content;
+    background-color: var(--white);
+    border-bottom-left-radius: 20px;
+    border-bottom-right-radius: 20px;
+    display: flex;
+    align-items: center;
+}
+.send-bar .attach-file-img{
+    width: calc(1.5vw + 1.5vh);
+    height: calc(1.5vw + 1.5vh);
+    object-fit: cover;
+    cursor: pointer;
+    margin-right: 10px;
+}
+.send-bar input{
+    display: none;
+}
+.send-bar textarea {
+    padding: 0.5em 1em 0.5em 1em;
+    height: fit-content;
+    /* max-height: 15vh; */
+    margin-right: 15px;
+    font-weight: lighter;
+    font-size: 1.6em;
+    resize: none;
+    flex-grow: 1;
+    background-color: var(--gray);
+    border: 0px;
+    border-radius: 15px;
+    display: flex;
+    align-items: center;
+    overflow: visible;
+}
+.send-bar textarea::placeholder{
+    font-size: 18px;
+}
+.send-bar button{
+    height: 6vh;
+    width: 6vh;
+    object-fit: contain;
+    background-image: url("../image/user-send-message-button.png");
+    background-size: contain;
+    background-position: center;
+    background-repeat: no-repeat;
+    border: 0px;
+    border-radius: 100%;
+    cursor: pointer;
+}
+.send-bar button:hover{
+    background-color: var(--gray-hover);
+}
+
+@keyframes loading-message {
+    0%{
+        rotate: 0deg;
+    }
+    100%{
+        rotate: 360deg;
+    }
+}
