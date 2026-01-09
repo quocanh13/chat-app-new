@@ -1,5 +1,6 @@
 import connection from "../../configs/database.mjs";
 import { FileInformation } from "../../public/utils/types.mjs";
+import { checkName } from "../../utils/checkData.mjs";
 import { createFile, deleteFile, getAvatarID } from "../file/file.mjs";
 
 /**
@@ -62,7 +63,7 @@ export async function register({username, password, name}) {
 export async function getUserData({username}) {
     try {
         const result = await connection.query(
-            "SELECT username, name, avatar FROM user WHERE username = ?;",
+            "SELECT username, name, avatar, password FROM user WHERE username = ?;",
             [username]
         );
         if(result[0].length == 0) return "USER DOES NOT EXIST"
@@ -97,7 +98,7 @@ async function deletePreviousAvatar(username) {
 
 /**
 * @param {FileInformation} avatar 
-* @returns {Promise<"number" | "OK">}
+* @returns {Promise<number | "ERROR">}
 */
 export async function updateAvatar(avatar) {
     const deletePre = await deletePreviousAvatar(avatar.username)
@@ -125,4 +126,47 @@ export async function updateAvatar(avatar) {
         return "ERROR";
     }
 
+}
+
+/**
+ * @param {string} username 
+ * @param {string} password 
+ * @param {string} name 
+ * @returns {Promise<"OK" | "ERROR">}
+ */
+export async function updateUserInformation(username, password, name) {
+    try {
+        if(password != "" && password != undefined && password != null) {
+            try {
+                await connection.query(
+                    `
+                        UPDATE user 
+                        SET password = ?
+                        WHERE username = ?
+                    `, [password, username]
+                )
+            } catch (err) {
+                console.log(err)
+                return "ERROR"
+            }
+        } 
+        if(name != "" && name != undefined && name != null && checkName(name)) {
+            try {
+                await connection.query(
+                    `
+                        UPDATE user 
+                        SET name = ?
+                        WHERE username = ?
+                    `, [name, username]
+                )
+            } catch (err) {
+                console.log(err)
+                return "ERROR"
+            }
+        } 
+        return "OK"
+    } catch(err) {
+        console.log(err)
+        return "ERROR"
+    }
 }

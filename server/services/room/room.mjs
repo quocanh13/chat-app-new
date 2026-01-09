@@ -44,7 +44,7 @@ export async function createRoom({username, roomName}) {
  * @param {string} param0.username
  * @returns {Promise<import("mysql2").RowDataPacket | "ERROR">}
  */
-export async function getRoomList({username}) {
+export async function getRoomIDList({username}) {
     try{
         const result = await connection.query(
             `
@@ -58,7 +58,7 @@ export async function getRoomList({username}) {
                     user_in_room.username = ?;
             `, 
             [username]);
-        return result[0];
+        return result[0]
     } catch(err) {
         console.log(err);
         return "ERROR";
@@ -115,6 +115,87 @@ export async function getRoomInformation(roomID) {
         console.log(err);
         return "ERROR";
     }
+}
+
+/**
+ * @param {string} username 
+ * @returns {Promise<import("../../public/utils/types.mjs").Room[] | "ERROR" | "ROOM DOES NOT EXIST">}
+ */
+export async function getRoomList({username}) {
+    const roomIDList = await getRoomIDList({username})
+    if(roomIDList == "ERROR") {
+        return "ERROR" 
+    } else {
+        const roomList = []
+        for(const id of roomIDList) {
+            const room = await getRoomInformation(id.roomID)
+            if(typeof room == "string") {
+                return room
+            } else {
+                roomList.push(room)
+            }
+        }
+        return roomList
+    }
+}
+
+/**
+ * 
+ * @param {string} username 
+ * @param {number} roomID 
+ * @returns {Promise<boolean | "ERROR">}
+ */
+export async function isHost(username, roomID) {
+    try {
+        const result = await connection.query(
+            `
+                SELECT * FROM room WHERE room_id = ? AND username = ?
+            `, [roomID, username]
+        )
+        if(result[0].length == 0) return false
+        else return true
+    } catch(err) {
+        console.log(err)
+        return  "ERROR"
+    }
+}
+
+/**
+ * @param {string} username 
+ * @param {number} roomID 
+ * @returns {Promise<"OK" | "ERROR" | "YOU ARE NOT THE HOST">}
+ */
+export async function deleteRoom(username, roomID) {
+    const host = await isHost(username, roomID)
+    if(host == "ERROR") {
+        return "ERROR"
+    } else if(host) {
+        try {
+            await connection.query(
+                `
+                    DELETE FROM message 
+                    WHERE room_id = ?
+                `, [roomID]
+            )
+
+            await connection.query(
+                `
+                    DELETE FROM user_in_room
+                    WHERE room_id = ?
+                `,[roomID]
+            )
+
+            await connection.query(
+                `
+                    DELETE FROM room WHERE room_id = ?
+                `, [roomID]
+            )
+            return "OK"
+        } catch(err) {
+            console.log(err)
+            return "ERROR"
+        }
+    } else return "YOU ARE NOT THE HOST"
 }
 
 // const input = {

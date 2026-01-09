@@ -1,5 +1,5 @@
 import { Router } from "express";
-import { getUserInformation, verifyUser, postUser, checkData, getRoomList, verifyAvatar, updateAvatar } from "../handlers/userHandler.mjs";
+import { getUserInformation, verifyUser, postUser, checkData, getRoomList, verifyAvatar, updateAvatar, updateUserInformation } from "../handlers/userHandler.mjs";
 import multer from "multer";
 
 const upload = multer({storage : multer.memoryStorage()})
@@ -11,6 +11,7 @@ router.post("/user", postUser)
 
 router.use("/user/:username", verifyUser);
 router.get("/user/:username", getUserInformation);
+router.put("/user/:username", updateUserInformation)
 
 router.get("/user/:username/room", getRoomList);
 

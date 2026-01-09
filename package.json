@@ -9,7 +9,13 @@
   "type": "module",
   "scripts": {
     "test": "server.mjs",
-    "start": "nodemon ./server/server.mjs"
+    "start": "nodemon ./server/server.mjs",
+    "build-login": "babel ./server/src/login/src/ --out-dir ./server/src/login/dist --copy-files && webpack --config ./webpack.config/login.config.mjs",
+    "build-register": "babel ./server/src/register/src/ --out-dir ./server/src/register/dist --copy-files && webpack --config ./webpack.config/register.config.mjs",
+    "build-chat-app": "babel ./server/src/chat-app/src/ --out-dir ./server/src/chat-app/dist --copy-files && webpack --config ./webpack.config/chat-app.config.mjs",
+    "build-all" : "npm run build-login && npm run build-register && npm run build-chat-app",
+    "build" : "babel ./server/src --out-dir ./server/public --copy-files",
+    "watch" : "babel ./server/src --out-dir ./server/public --copy-files --watch"
   },
   "keywords": [
     "Appartment",
@@ -19,13 +25,21 @@
   "author": "quocanh",
   "license": "ISC",
   "dependencies": {
+    "@babel/core": "^7.28.5",
+    "@babel/preset-react": "^7.28.5",
     "cookie-parser": "^1.4.7",
+    "css-loader": "^7.1.2",
     "dotenv": "^17.2.3",
     "express": "^5.1.0",
+    "html-webpack-plugin": "^5.6.5",
     "jsonwebtoken": "^9.0.2",
     "multer": "^2.0.2",
     "mysql2": "^3.15.2",
     "nodemon": "^3.1.10",
+    "react": "^19.2.3",
+    "react-dom": "^19.2.3",
+    "style-loader": "^4.0.0",
+    "webpack-cli": "^6.0.1",
     "ws": "^8.18.3"
   }
 }

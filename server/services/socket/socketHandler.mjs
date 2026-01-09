@@ -19,7 +19,9 @@ async function messageHanlder(username, data, isBinary) {
     /**@type {SendingMessage} */
     const sendingMessage = JSON.parse(data.toString())
     sendingMessage.username = username;
+
     const messageID = await createMessage(sendingMessage);
+    
     if(typeof messageID == "number") {
         /**@type {ReceivingMessage} */
         const receivingMessage = await getMessageByID(messageID);

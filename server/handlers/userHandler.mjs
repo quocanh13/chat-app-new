@@ -4,7 +4,7 @@ import { FileInformation, ServerResponse } from "../public/utils/types.mjs";
 import { checkUsername, checkPassword, checkName } from "../utils/checkData.mjs";
 import { register } from "../services/user/user.mjs";
 import { getRoomList as DBGetRoomList } from "../services/room/room.mjs";
-import { updateAvatar as DBUpdateAvatar } from "../services/user/user.mjs";
+import { updateAvatar as DBUpdateAvatar, updateUserInformation as DBUpdateUserInformation } from "../services/user/user.mjs";
 import { isImage } from "../public/utils/checkFileType.js";
 
 
@@ -19,7 +19,7 @@ export function verifyUser(req, res, next) {
         /**@type {ServerResponse} */
         const resData = {
             type : "REDIRECT",
-            redirectURL : "/index/index.html",
+            redirectURL : "/login/login.html",
             message : "Token đã hết hạn, vui lòng quay lại trang đăng nhập",
             error : true
         }
@@ -128,7 +128,7 @@ export async function postUser(req, res) {
     } else {
         resData = {
             type : "REDIRECT",
-            redirectURL : "/index/index.html"
+            redirectURL : "/login/login.html"
         }
         res.status(200).json(resData);
     }
@@ -139,6 +139,7 @@ export async function postUser(req, res) {
  * @param {import("express").Response} res 
  */
 export async function getRoomList(req, res) {
+    console.log(req.userInformation.username + " " + req.params.username)
     /**@type {ServerResponse} */
     let resData;
     if(req.userInformation.username != req.params.username) {
@@ -159,6 +160,14 @@ export async function getRoomList(req, res) {
                 displayMessage : true
             }
             res.status(500).json(resData);
+        } else if(list == "ROOM DOES NOT EXIST") {
+            resData = {
+                type : "BAD REQUEST",
+                data : "Phòng không tồn tại",
+                error : true,
+                displayMessage : true
+            }
+            res.status(404).json(resData);
         } else {
             resData = {
                 type : "OK",
@@ -228,4 +237,28 @@ export async function updateAvatar(req, res) {
         }
         res.status(200).json(resData);
     }
+}
+
+export async function updateUserInformation(req, res) {
+    console.log(req.userInformation.username)
+    console.log(req.body)
+    const result = await DBUpdateUserInformation(req.userInformation.username, req.body.password, req.body.name)
+    /**@type {ServerResponse} */
+    let resData
+    if(result == "OK") {
+        resData = {
+            type : "OK",
+            message : "Bạn đã cập nhật thông tin thành công",
+            error : false
+        }
+        res.status(200)
+    } else {
+        resData = {
+            type : "SERVER ERROR",
+            message : "Server đang có lỗi vui lòng thử lại sau",
+            error : true
+        }
+        res.status(500)
+    }
+    res.json(resData)
 }

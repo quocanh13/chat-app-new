@@ -1,5 +1,5 @@
 import { ServerResponse } from "../public/utils/types.mjs";
-import { getRoomInformation as DBgetRoomInformation, createRoom, isInRoom } from "../services/room/room.mjs";
+import { getRoomInformation as DBgetRoomInformation, createRoom, deleteRoom as DBDeleteRoom, isInRoom } from "../services/room/room.mjs";
 import { checkRoomName } from "..//utils/checkData.mjs";
 import {verify} from "../utils/jwt.mjs"
 import { getLatestMessage } from "../services/message/message.mjs";
@@ -138,5 +138,44 @@ export async function verifyInRoom(req, res, next) {
         }
     } else {
         next();
+    }
+}
+
+/**
+ * @param {import("express").Request} req 
+ * @param {import("express").Response} res 
+ */
+export async function deleteRoom(req, res) {
+    const result = await DBDeleteRoom(
+        req.userInformation.username,
+        req.params.roomID
+    )
+    /**@type {ServerResponse} */
+    let resData;
+    if(result == "OK") {
+        resData = {
+            type : "OK",
+            message : "Bạn đã xóa phòng thành công",
+            data : result,
+            error : false,
+            displayMessage : true
+        }
+        res.status(200).json(resData);
+    } else if(result == "YOU ARE NOT THE HOST") {
+        resData = {
+            type : "BAD REQUEST",
+            message : "Bạn không phải là chủ phòng này nên không thể xóa phòng",
+            error : true,
+            displayMessage : true
+        }
+        res.status(400).json(resData);
+    } else {
+        resData = {
+            type : "SERVER ERROR",
+            message : "Server hiện đang có lỗi, vui lòng thử lại sau",
+            error : true,
+            displayMessage : true
+        }
+        res.status(500).json(resData);
     }
 }

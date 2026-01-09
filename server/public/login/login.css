@@ -1,0 +1,89 @@
+:root {
+  --primary-color: #4f46e5;
+  --bg-input: #ffffff;
+  --border-color: #d1d5db;
+  --icon-color: #9ca3af;
+}
+
+.login-container {
+  max-width: 400px;
+  margin: 60px auto;
+  padding: 2.5rem;
+  background: #fff;
+  border-radius: 16px;
+  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1);
+  font-family: 'Inter', system-ui, sans-serif;
+}
+
+.login-container h3 {
+  text-align: center;
+  font-size: 1.8rem;
+  font-weight: 800;
+  margin-bottom: 2rem;
+  color: #111827;
+}
+
+.login-form {
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+}
+
+/* Container chứa cả icon và input */
+.form-group {
+  position: relative; /* Quan trọng để định vị icon */
+  display: flex;
+  align-items: center;
+}
+
+.form-group img {
+  position: absolute;
+  left: 12px;
+  width: 20px;
+  height: 20px;
+  opacity: 0.6;
+  pointer-events: none; /* Tránh việc click vào icon làm cản trở focus input */
+}
+
+.form-group input {
+  width: 100%;
+  padding: 0.8rem 0.8rem 0.8rem 40px; /* Padding left lớn để không đè lên icon */
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
+  font-size: 0.95rem;
+  background-color: var(--bg-input);
+  transition: all 0.2s ease;
+}
+
+.form-group input:focus {
+  outline: none;
+  border-color: var(--primary-color);
+  box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.1);
+}
+
+.btn-login {
+  padding: 0.8rem;
+  background-color: var(--primary-color);
+  color: white;
+  border: none;
+  border-radius: 8px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: opacity 0.2s;
+}
+
+.btn-login:hover {
+  opacity: 0.9;
+}
+
+.login-form p {
+  text-align: center;
+  font-size: 0.85rem;
+  color: #6b7280;
+}
+
+.login-form a {
+  color: var(--primary-color);
+  text-decoration: none;
+  font-weight: 600;
+}

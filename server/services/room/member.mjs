@@ -12,7 +12,8 @@ export async function getMemberList(roomID) {
             `
                 SELECT 
                     u.username as username,
-                    u.name as name
+                    u.name as name,
+                    u.avatar as avatar
                 FROM user_in_room uir
                     INNER JOIN user u ON u.username = uir.username
                 WHERE uir.room_id = ?;

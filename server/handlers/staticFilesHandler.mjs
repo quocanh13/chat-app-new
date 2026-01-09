@@ -3,7 +3,7 @@
  * @param {import("express").Response} res
  */
 export function getIndex(req, res) {
-    res.redirect("/index/index.html");
+    res.redirect("/login/login.html");
 }
 
 /**

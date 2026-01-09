@@ -1,0 +1,397 @@
+/**************************  SidebarHeader  *********************/
+.sidebar-header {
+    display: flex;
+    justify-content: space-between; /* Đẩy tiêu đề sang trái, cụm icon sang phải */
+    align-items: center;
+    padding: 15px 20px;
+    background-color: #fff;
+    border-bottom: 1px solid #f0f0f0; /* Đường kẻ mờ bên dưới */
+}
+
+.sidebar-title {
+    font-size: 24px;
+    font-weight: 700;
+    color: #050505;
+    margin: 0;
+}
+
+.sidebar-actions {
+    display: flex;
+    align-items: center;
+    gap: 12px; /* Khoảng cách giữa avatar và nút tạo phòng */
+}
+
+/* Style cho Avatar người dùng */
+.avatar-wrapper {
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    overflow: hidden;
+    cursor: pointer;
+    background-color: #f0f2f5;
+    transition: filter 0.2s;
+}
+
+.avatar-wrapper:hover {
+    filter: brightness(0.9);
+}
+
+.user-avatar {
+    width: 100%;
+    height: 100%;
+    object-fit: cover; /* Đảm bảo ảnh không bị móp méo */
+}
+
+/* Style cho nút tạo phòng mới */
+.btn-new-room {
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    border: none;
+    background-color: #f0f2f5;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    cursor: pointer;
+    transition: background-color 0.2s;
+}
+
+.btn-new-room:hover {
+    background-color: #e4e6eb;
+}
+
+.btn-new-room img {
+    width: 20px;
+    height: 20px;
+}
+
+/**************************  RoomSearchBar  *********************/
+
+/* Container bên ngoài tạo khoảng cách với Header và danh sách chat */
+.room-search-container {
+    padding: 10px 16px;
+    background-color: #fff;
+}
+
+/* Wrapper để giữ icon và input */
+.search-input-wrapper {
+    position: relative; /* Quan trọng để đặt icon bên trong */
+    display: flex;
+    align-items: center;
+}
+
+/* Style cho icon kính lúp */
+.search-icon {
+    position: absolute;
+    left: 12px;
+    width: 16px;
+    height: 16px;
+    opacity: 0.5;
+    pointer-events: none; /* Để khi click vào icon vẫn focus được vào input bên dưới */
+}
+
+/* Style cho ô input chính */
+.search-input {
+    width: 100%;
+    padding: 9px 12px 9px 38px; /* Padding trái lớn hơn (38px) để nhường chỗ cho icon */
+    border: none;
+    border-radius: 20px; /* Bo tròn mạnh kiểu Messenger */
+    background-color: #f0f2f5;
+    font-size: 15px;
+    outline: none;
+    transition: background-color 0.2s;
+}
+
+/* Hiệu ứng khi người dùng nhấn vào ô search */
+.search-input:focus {
+    background-color: #e4e6eb;
+}
+
+/* Thay đổi màu chữ placeholder */
+.search-input::placeholder {
+    color: #65676b;
+    font-weight: 400;
+}
+
+/************************** RoomList & RoomListCard  *********************/
+
+.room-list-container {
+    padding: 8px;
+    overflow-y: auto; /* Cho phép cuộn danh sách chat */
+    height: calc(100vh - 140px); /* Trừ đi chiều cao của Header và SearchBar */
+}
+
+.room-card {
+    display: flex;
+    align-items: center;
+    padding: 10px;
+    border-radius: 10px;
+    cursor: pointer;
+    transition: background-color 0.2s;
+    margin-bottom: 4px;
+}
+
+.room-card:hover {
+    background-color: #f5f5f5;
+}
+
+/* Kích thước Avatar trong danh sách */
+.room-avatar-wrapper {
+    position: relative;
+    width: 50px;
+    height: 50px;
+    margin-right: 12px;
+    flex-shrink: 0; /* Không cho ảnh bị bóp nhỏ */
+}
+
+.room-avatar {
+    width: 100%;
+    height: 100%;
+    border-radius: 50%;
+    object-fit: cover;
+}
+
+/* Chấm xanh trạng thái online */
+.online-indicator {
+    position: absolute;
+    bottom: 2px;
+    right: 2px;
+    width: 12px;
+    height: 12px;
+    background-color: #31a24c;
+    border: 2px solid #fff;
+    border-radius: 50%;
+}
+
+/* Nội dung tin nhắn bên phải */
+.room-info {
+    flex-grow: 1;
+    overflow: hidden; /* Cần thiết để cắt chữ (ellipsis) */
+}
+
+.room-name {
+    font-size: 17px;        /* Tăng từ 15px lên 17px (hoặc 18px nếu muốn to hẳn) */
+    font-weight: 600;        /* 600 là Semibold, 700 là Bold hẳn */
+    color: #050505;          /* Màu đen sâu để tăng độ tương phản */
+    margin-bottom: 3px;      /* Tăng khoảng cách với dòng tin nhắn bên dưới một chút */
+    
+    /* Đảm bảo tên quá dài không làm vỡ giao diện */
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.room-latest-msg {
+    font-size: 13px;
+    color: #65676b;
+    display: flex;
+    white-space: nowrap;
+}
+
+/* Hiệu ứng dấu "..." khi tin nhắn quá dài */
+.msg-text {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    max-width: 150px; /* Điều chỉnh tùy độ rộng sidebar */
+}
+
+.msg-time {
+    margin-left: 4px;
+    flex-shrink: 0;
+}
+
+/********************************************************************************/
+
+/********************************** UserInformationCard *********************************/
+
+.user-info-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    background-color: rgba(0, 0, 0, 0.4); /* Làm tối nền nhẹ nhàng hơn */
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 1000;
+    backdrop-filter: blur(4px); /* Hiệu ứng mờ nền hiện đại */
+}
+
+/* Thẻ thông tin chính */
+.user-info-card {
+    width: 100%;
+    max-width: 420px;
+    background-color: #ffffff;
+    border-radius: 16px; /* Bo tròn mạnh hơn */
+    padding: 28px;
+    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.2);
+    font-family: "Segoe UI", Tahoma, sans-serif;
+    animation: slideUp 0.3s ease-out; /* Hiệu ứng xuất hiện */
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+}
+
+@keyframes slideUp {
+    from { transform: translateY(20px); opacity: 0; }
+    to { transform: translateY(0); opacity: 1; }
+}
+
+.user-info-title {
+    margin: 0 0 24px 0;
+    font-size: 22px;
+    font-weight: 700;
+    color: #050505;
+    text-align: center;
+}
+
+/* Bố cục form */
+.user-info-form {
+    display: flex;
+    flex-direction: column;
+    gap: 18px;
+}
+
+.form-group {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.form-group label {
+    font-size: 14px;
+    font-weight: 600;
+    color: #65676b;
+    margin-left: 2px;
+}
+
+.form-group input {
+    padding: 12px 14px;
+    border: 1px solid #dddfe2;
+    border-radius: 8px;
+    font-size: 15px;
+    outline: none;
+    background-color: #f5f6f7;
+    transition: all 0.2s ease;
+}
+
+/* Hiệu ứng khi focus hoặc input là readOnly */
+.form-group input:focus {
+    border-color: #0084ff;
+    background-color: #fff;
+    box-shadow: 0 0 0 2px rgba(0, 132, 255, 0.2);
+}
+
+.form-group input[readOnly] {
+    color: #8a8d91;
+    cursor: not-allowed;
+    background-color: #f0f2f5;
+}
+
+/* Nút bấm */
+.user-info-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 12px;
+    margin-top: 12px;
+}
+
+.user-info-actions button {
+    padding: 10px 24px;
+    border-radius: 8px;
+    font-weight: 600;
+    font-size: 15px;
+    cursor: pointer;
+    border: none;
+    transition: all 0.2s;
+}
+
+.btn-close {
+    background-color: #e4e6eb;
+    color: #050505;
+}
+
+.btn-close:hover {
+    background-color: #d8dadf;
+}
+
+.btn-save {
+    background-color: #0084ff;
+    color: #ffffff;
+}
+
+.btn-save:hover {
+    background-color: #0073e6;
+    transform: translateY(-1px);
+}
+
+.btn-save:active {
+    transform: translateY(0);
+}
+
+.user-info-card img{
+    object-fit: contain;
+    width: 80px;
+    height: 80px;
+    border-radius: 100%;
+    margin-right: auto;
+    margin-left: auto;
+    cursor: pointer;
+}
+
+#attach-avatar{
+    display: none;
+}
+
+/********************************** UserInformationCard *********************************/
+
+/********************************** AddRoomForm *****************************************/
+/* Thêm đoạn này vào cuối file src/style/sidebar.css */
+
+.add-room-card {
+    position: absolute;
+    width: 100%;
+    max-width: 400px; /* Độ rộng form tạo phòng */
+    background-color: #ffffff;
+    border-radius: 16px;
+    padding: 24px;
+    box-shadow: 0 12px 28px rgba(0, 0, 0, 0.2);
+    font-family: "Segoe UI", Tahoma, sans-serif;
+    animation: modalFadeIn 0.3s ease;
+}
+
+/* Hiệu ứng hiện hình nhẹ nhàng */
+@keyframes modalFadeIn {
+    from { transform: scale(0.9); opacity: 0; }
+    to { transform: scale(1); opacity: 1; }
+}
+
+/* Tinh chỉnh input riêng cho form tạo phòng */
+.add-room-card .form-group input {
+    padding: 12px;
+    border: 1px solid #dddfe2;
+    border-radius: 8px;
+    font-size: 16px;
+    outline: none;
+    transition: border-color 0.2s;
+}
+
+.add-room-card .form-group input:focus {
+    border-color: #0084ff;
+    box-shadow: 0 0 0 2px rgba(0, 132, 255, 0.2);
+}
+
+/* Tái sử dụng các button style đã có từ UserInformationCard */
+.add-room-card .btn-save {
+    background-color: #0084ff;
+    color: white;
+}
+
+.add-room-card .btn-close {
+    background-color: #e4e6eb;
+    color: #050505;
+}
+/********************************** AddRoomForm *****************************************/
+

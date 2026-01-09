@@ -1,0 +1,47 @@
+body {
+    margin: 0px;
+    padding: 0px;
+    background-color: #f0f2f5; 
+    /* Thêm dòng dưới đây để đổi phông chữ */
+    font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+}
+
+.chatapp-container {
+    display: flex;
+    height: 100vh;
+    width: 100vw;
+    overflow: hidden;
+    /* Tạo khoảng cách so với biên màn hình */
+    padding: 15px; 
+    box-sizing: border-box;
+    /* Khoảng cách giữa Sidebar và ChatRoom */
+    gap: 15px; 
+}
+
+/* Style cho Sidebar (phần tử con đầu tiên) */
+.chatapp-container > :first-child { 
+    width: 360px;
+    min-width: 300px;
+    max-width: 420px;
+    flex-shrink: 0;
+    
+    /* Bo tròn và đổ bóng */
+    background-color: #fff;
+    border-radius: 15px;
+    box-shadow: 0 2px 12px rgba(0, 0, 0, 0.1);
+    border: 1px solid #e5e5e5; /* Thay cho border-right cũ */
+    overflow: hidden; /* Đảm bảo nội dung không chèn lên góc bo tròn */
+}
+
+/* Style cho ChatRoom (phần tử con thứ hai) */
+.chatapp-container > :last-child {
+    flex-grow: 1;
+    display: flex;
+    flex-direction: column;
+
+    /* Bo tròn và đổ bóng */
+    background-color: #fff;
+    border-radius: 15px;
+    box-shadow: 0 2px 12px rgba(0, 0, 0, 0.1);
+    overflow: hidden;
+}
