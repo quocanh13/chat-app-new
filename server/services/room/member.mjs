@@ -1,4 +1,5 @@
 import connection from "../../configs/database.mjs";
+import { getUserData } from "../user/user.mjs";
 import { isInRoom } from "./room.mjs";
 
 /**
@@ -16,7 +17,8 @@ export async function getMemberList(roomID) {
                     u.avatar as avatar
                 FROM user_in_room uir
                     INNER JOIN user u ON u.username = uir.username
-                WHERE uir.room_id = ?;
+                WHERE uir.room_id = ?
+                ORDER BY time ASC;
             `,
             [roomID]
         );
@@ -39,7 +41,9 @@ export async function addMember({username, roomID}) {
             "INSERT INTO user_in_room(username, room_id) values (?, ?);",
             [username, roomID]
         )
-        return "OK";
+        const member = await getUserData({username, getPassword : false})
+
+        return member;
     } catch(err) {
         console.log(err);
         if(err.code == "ER_NO_REFERENCED_ROW_2") {

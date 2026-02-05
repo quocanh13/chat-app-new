@@ -132,9 +132,11 @@
 }
 
 .room-card:hover {
-    background-color: #f5f5f5;
+    background-color: #d8dadf;
 }
-
+.cur-room{
+    background-color: #d8dadf;
+}
 /* Kích thước Avatar trong danh sách */
 .room-avatar-wrapper {
     position: relative;
@@ -186,6 +188,11 @@
     color: #65676b;
     display: flex;
     white-space: nowrap;
+}
+
+.new-message{
+    font-weight: bold;
+    color: black;
 }
 
 /* Hiệu ứng dấu "..." khi tin nhắn quá dài */

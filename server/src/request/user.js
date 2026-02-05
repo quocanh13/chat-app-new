@@ -54,3 +54,16 @@ export async function updateUserInformation(username, password, name) {
     if(resData.type == "REDIRECT") window.location.href = resData.redirectURL
     return resData
 }
+
+export async function leaveRoom(username, roomID) {
+    const res = await fetch(
+        `/user/${username}/room/${roomID}`,
+        {
+            method : "DELETE",
+        }
+    )
+    /**@type {ServerResponse} */
+    const resData = await res.json()
+    if(resData.type == "REDIRECT") window.location.href = resData.redirectURL
+    return resData
+}

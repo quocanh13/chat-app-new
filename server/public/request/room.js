@@ -121,3 +121,20 @@ export async function deleteRoom(roomID) {
   }
   return resData;
 }
+
+/**
+ * @param {number} roomID 
+ * @returns {Promise<ServerResponse>}
+ */
+export async function getLatestMessage(roomID) {
+  const res = await fetch(`/room/${roomID}/message/latest`, {
+    method: "GET"
+  });
+
+  /**@type {ServerResponse} */
+  const resData = await res.json();
+  if (resData.type == "REDIRECT") {
+    window.location.href = resData.redirectURL;
+  }
+  return resData;
+}

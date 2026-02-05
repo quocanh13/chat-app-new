@@ -1,4 +1,4 @@
-import { getUserData } from "../services/user/user.mjs";
+import { getUserData, leaveRoom as DBLeaveRoom } from "../services/user/user.mjs";
 import {verify} from "../utils/jwt.mjs"
 import { FileInformation, ServerResponse } from "../public/utils/types.mjs";
 import { checkUsername, checkPassword, checkName } from "../utils/checkData.mjs";
@@ -6,6 +6,7 @@ import { register } from "../services/user/user.mjs";
 import { getRoomList as DBGetRoomList } from "../services/room/room.mjs";
 import { updateAvatar as DBUpdateAvatar, updateUserInformation as DBUpdateUserInformation } from "../services/user/user.mjs";
 import { isImage } from "../public/utils/checkFileType.js";
+import { leaveRoom as socketLeaveRoom } from "../services/socket/socketHandler.mjs";
 
 
 /**
@@ -259,6 +260,52 @@ export async function updateUserInformation(req, res) {
             error : true
         }
         res.status(500)
+    }
+    res.json(resData)
+}
+
+/**
+ * @param {import("express").Request} req 
+ * @param {import("express").Response} res 
+ */
+export async function leaveRoom(req, res) {
+    /**@type {ServerResponse} */
+    let resData;
+    
+    const result = await DBLeaveRoom({username : req.userInformation.username, roomID : req.params.roomID})
+    if(result == "OK") {
+        resData = {
+            type : "OK",
+            message : "Bạn đã rời phòng thành công",
+            error : false,
+            displayMessage : true
+        }
+        socketLeaveRoom(req.params.roomID, req.userInformation.username)
+        res.status(200)
+    } else if(result == "HOST CANNOT LEAVE ROOM") {
+        resData = {
+            type : "BAD REQUEST",
+            message : "Bạn là chủ phòng không thể rời phòng, chỉ có thể xóa phòng",
+            error : true,
+            displayMessage : true
+        }
+        res.status(404)
+    } else if(result == "USER WAS NOT IN ROOM") {
+        resData = {
+            type : "BAD REQUEST",
+            message : "Bạn không ở trong phòng này",
+            error : true,
+            displayMessage : true
+        }
+        res.status(404)
+    } else {
+        resData = {
+            type : "SERVER ERROR",
+            message : "Server đang có lỗi, vui lòng thử lại sau",
+            error : true,
+            displayMessage : true
+        }
+        res.status(500)    
     }
     res.json(resData)
 }

@@ -1,6 +1,7 @@
 import { ServerResponse } from "../public/utils/types.mjs";
 import { isHost, removeMember, addMember } from "../services/room/member.mjs";
 import { isInRoom } from "../services/room/room.mjs";
+import { addMember as socketAddMember, deleteMember as socketDeleteMember } from "../services/socket/socketHandler.mjs";
 
 
 /**
@@ -34,13 +35,15 @@ export async function postMember(req, res) {
 
     /**@type {ServerResponse} */
     let resData
-    if(result == "OK") {
+    if(typeof result == "object") {
         resData = {
             type : "OK",
             message : `Đã thêm ${req.body.memberUsername} vào phòng`,
             error : false,
-            displayMessage : true
+            displayMessage : true,
+            data : result
         }
+        socketAddMember(req.params.roomID, req.body.memberUsername)
         res.status(200).json(resData);
     } else if(result == "USER OR ROOM DOES NOT EXIST") {
         resData = {
@@ -85,6 +88,7 @@ export async function deleteMember(req, res) {
                 error : false,
                 displayMessage : true
             }
+            socketDeleteMember(req.params.roomID, req.params.username)
             res.status(200).json(resData);
         } else if(result == "CANNOT REMOVE HOST") {
             resData = {

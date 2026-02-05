@@ -1,10 +1,8 @@
 import express from "express";
 import cookieParser from "cookie-parser";
-
-import socketServer from "./services/socket/sockerServer.mjs";
+import http from "http"
 
 import indexRouter from "./routers/loginRoute.mjs";
-// import registerRouter from "./routers/registerRoute.mjs";
 import userRouter from "./routers/userRoute.mjs";
 import roomRouter from "./routers/roomRoute.mjs";
 import staticFilesRouter from "./routers/staticFilesRoute.mjs"
@@ -18,12 +16,15 @@ server.use(express.json());
 
 server.use((req, res, next)=>{
     console.log(req.url);
-    
     next();
 });
+
 server.use([staticFilesRouter, indexRouter, userRouter, roomRouter, fileRouter]);
 
-server.listen(80, '::', ()=>{
+const httpServer = http.createServer(server)
+
+httpServer.listen(80, '::', ()=>{
     console.log("Server Is Listening");
 });
 
+export default httpServer

@@ -1,30 +1,34 @@
-import { WebSocketServer } from "ws";
 import cookieParser from "../../public/utils/cookie-parse.js"
 import { verify } from "../../utils/jwt.mjs";
 import { getRoomList } from "../room/room.mjs";
-import { RoomManagement } from "./roomSocket.mjs";
-import { ReceivingMessage, SendingMessage } from "../../public/utils/types.mjs";
 import addEventHandler from "./socketHandler.mjs";
+import {Server} from "socket.io"
+import httpServer from "../../server.mjs"
 
-const server = new WebSocketServer({port : 3000});
-export const roomSocketList = new RoomManagement();
+const server = new Server(httpServer)
+const userSockets = new Map();
 
-server.on("connection", async (ws, req)=>{
-    const token = cookieParser(req.headers.cookie).token;
-    const paypload = verify(token);
-    if(paypload == "ERROR") {
-        ws.close(1002, "Token đã hết hạn hoặc không đúng");
+server.on("connection", async (ws)=>{
+    const token = cookieParser(ws.request.headers.cookie).token;
+    const payload = verify(token);
+    if(payload == "ERROR") {
+        ws.disconnect(true)
     } else {
-        ws.username = paypload.username;
-        ws.name = paypload.name;
-        const roomList = await getRoomList(ws);
+        ws.username = payload.username;
+        ws.name = payload.name;
+        userSockets.set(ws.username, ws)
+        const roomList = await getRoomList({username : ws.username});
         for(const i of roomList) {
-            roomSocketList.getRoom(i.roomID).addSocket(ws);
+            ws.join(i.roomID.toString());
         }
-        addEventHandler(ws);
     }
 
+    ws.on("disconnect", (reason)=>{
+        userSockets.delete(ws.username);
+    })
+
+    addEventHandler(ws)
 });
 
 
-export default server;
+export {server, userSockets};

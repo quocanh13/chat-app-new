@@ -10,21 +10,23 @@ import { getMemberList } from "./member.mjs";
  */
 export async function createRoom({username, roomName}) {
     try{
-        await connection.query(
+        const res = await connection.query(
             "INSERT INTO ROOM(username, room_name) VALUES ( ?, ? )", 
             [username, roomName]
         );
-
-        const roomID = (await connection.query(
-            "SELECT room_id AS roomID FROM ROOM WHERE username = ? AND room_name = ?",
-            [username, roomName]
-        ))[0][0].roomID;
-
+        
+        const roomID = res[0].insertId
         await connection.query(
             "INSERT INTO USER_IN_ROOM(username, room_id) VALUES (?, ?)",
             [username, roomID]
         );
-        return roomID;
+        
+        const room = await getRoomInformation(roomID)
+        if(room == "ERROR" || room == "ROOM DOES NOT EXIST") {
+            return "ERROR"
+        } else {
+            return room
+        }
     } catch (err) {
         console.log(err);
         if(err.code == "ER_DUP_ENTRY") {
@@ -96,7 +98,8 @@ export async function getRoomInformation(roomID) {
                 SELECT 
                     r.room_id as roomID,
                     r.room_name as roomName,
-                    r.username as host
+                    r.username as host,
+                    r.avatar as avatar
                 FROM room r
                 WHERE r.room_id = ?;
             `,
@@ -122,6 +125,7 @@ export async function getRoomInformation(roomID) {
  * @returns {Promise<import("../../public/utils/types.mjs").Room[] | "ERROR" | "ROOM DOES NOT EXIST">}
  */
 export async function getRoomList({username}) {
+    console.log("GET ROOM LIST")
     const roomIDList = await getRoomIDList({username})
     if(roomIDList == "ERROR") {
         return "ERROR" 
@@ -132,6 +136,15 @@ export async function getRoomList({username}) {
             if(typeof room == "string") {
                 return room
             } else {
+                try{
+                    const res = await connection.query(`
+                            SELECT * FROM user_in_room WHERE username = ? AND room_id = ?;
+                        `, [username, room.roomID])
+                    room.seen = res[0][0].seen
+                } catch (err) {
+                    console.log(err);
+                    return "ERROR"
+                }
                 roomList.push(room)
             }
         }

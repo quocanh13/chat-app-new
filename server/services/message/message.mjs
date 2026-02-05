@@ -1,5 +1,6 @@
 import connection from "../../configs/database.mjs";
 import { ReceivingMessage, SendingMessage } from "../../public/utils/types.mjs";
+import { getFileInformation } from "../file/file.mjs";
 import { isInRoom } from "../room/room.mjs";
 
 /**
@@ -57,7 +58,14 @@ export async function getMessageList({roomID, limit, offset}) {
             `,
             [roomID, limit, offset]
         )
-        return result[0];
+        const messageList = result[0]
+        for(let i = 0; i < messageList.length; i++) {
+            if(messageList[i].fileID != null) {
+                const file = await getFileInformation(messageList[i].fileID)
+                messageList[i].file = file
+            }
+        }
+        return messageList
     } catch(err) {
         console.log(err);
         if(err.code == "ER_PARSE_ERROR") {
@@ -91,7 +99,11 @@ export async function getMessageByID(messageID) {
             [messageID]
         );
         if(result[0].length == 1) {
-            return result[0][0];
+            const message = result[0][0]
+            if(message.fileID != null) {
+                message.file = await getFileInformation(message.fileID)
+            }
+            return message
         } else {
             return `THERE IS NO MESSAGE WITH THIS ID`;
         }
@@ -110,7 +122,7 @@ export async function getLatestMessage(roomID) {
         const res = await connection.query(
             `
                 SELECT 
-                    m.message AS message, u.name AS name, u.username as username
+                    m.message AS message, u.name AS name, u.username as username, m.file_id as fileID
                 FROM message m 
                 LEFT JOIN user u ON u.username = m.username
                 WHERE m.room_id = ?
@@ -125,7 +137,11 @@ export async function getLatestMessage(roomID) {
                 name : "Bạn"
             }
         } else {
-            return res[0][0];
+            const message = res[0][0]
+            if(message.fileID != null) {
+                message.file = await getFileInformation(message.fileID)
+            }
+            return message
         }
     } catch (err) {
         console.log(err);

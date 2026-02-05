@@ -2,6 +2,7 @@ import connection from "../../configs/database.mjs";
 import { FileInformation } from "../../public/utils/types.mjs";
 import { checkName } from "../../utils/checkData.mjs";
 import { createFile, deleteFile, getAvatarID } from "../file/file.mjs";
+import { isInRoom, isHost } from "../room/room.mjs";
 
 /**
  * @param {object} param0 
@@ -60,10 +61,12 @@ export async function register({username, password, name}) {
  * @param {string} param0.username
  * @return {Promise<{username : string, name : string} | "ERROR" | "USER DOES NOT EXIST">}
  */
-export async function getUserData({username}) {
+export async function getUserData({username, getPassword = true}) {
     try {
+        let password = ", password"
+        if(getPassword == false) password = ""
         const result = await connection.query(
-            "SELECT username, name, avatar, password FROM user WHERE username = ?;",
+            `SELECT username, name, avatar${password} FROM user WHERE username = ?;`,
             [username]
         );
         if(result[0].length == 0) return "USER DOES NOT EXIST"
@@ -166,6 +169,33 @@ export async function updateUserInformation(username, password, name) {
         } 
         return "OK"
     } catch(err) {
+        console.log(err)
+        return "ERROR"
+    }
+}
+
+/**
+ * @param {Object} param0 
+ * @param {string} param0.username
+ * @param {string} param0.roomID
+ * @returns {Promise<"OK" | "ERROR" | "USER WAS NOT IN ROOM" | "HOST CANNOT LEAVE ROOM">}
+ */
+export async function leaveRoom({username, roomID}) {
+    try {
+        const inRoom = await isInRoom({username, roomID}) 
+        if(inRoom == false) return "USER WAS NOT IN ROOM"
+        console.log({username, roomID})
+        const _isHost = await isHost(username, roomID)
+        if(_isHost == "ERROR") return "ERROR"
+        else if(_isHost == true) return "HOST CANNOT LEAVE ROOM"
+
+        const res = await connection.query(
+            `
+                DELETE FROM user_in_room WHERE username = ? AND room_id = ?
+            `, [username, roomID]
+        )
+        return "OK"
+    }catch(err) {
         console.log(err)
         return "ERROR"
     }

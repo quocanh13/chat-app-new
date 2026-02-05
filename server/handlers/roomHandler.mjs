@@ -3,6 +3,7 @@ import { getRoomInformation as DBgetRoomInformation, createRoom, deleteRoom as D
 import { checkRoomName } from "..//utils/checkData.mjs";
 import {verify} from "../utils/jwt.mjs"
 import { getLatestMessage } from "../services/message/message.mjs";
+import { deleteAllMember } from "../services/socket/socketHandler.mjs";
 
 /**
  * @param {import("express").Request} req 
@@ -76,16 +77,7 @@ export async function postRoom(req, res) {
     });
     /**@type {ServerResponse} */
     let resData;
-    if(typeof result == "number") {
-        resData = {
-            type : "OK",
-            message : "Bạn đã tạo phòng thành công",
-            data : result,
-            error : false,
-            displayMessage : true
-        }
-        res.status(200).json(resData);
-    } else if(result == "ROOM NAME ALREADY EXISTED") {
+    if(result == "ROOM NAME ALREADY EXISTED") {
         resData = {
             type : "BAD REQUEST",
             message : "Tên phòng đã tồn tại",
@@ -109,7 +101,7 @@ export async function postRoom(req, res) {
             displayMessage : true
         }
         res.status(400).json(resData);
-    } else {
+    } else if(result == "ERROR") {
         resData = {
             type : "SERVER ERROR",
             message : "Server hiện đang có lỗi, vui lòng thử lại sau",
@@ -117,6 +109,15 @@ export async function postRoom(req, res) {
             displayMessage : true
         }
         res.status(400).json(resData);
+    } else {
+        resData = {
+            type : "OK",
+            message : "Bạn đã tạo phòng thành công",
+            data : result,
+            error : false,
+            displayMessage : true
+        }
+        res.status(200).json(resData);
     }
 }
 
@@ -160,6 +161,7 @@ export async function deleteRoom(req, res) {
             error : false,
             displayMessage : true
         }
+        deleteAllMember(req.params.roomID)
         res.status(200).json(resData);
     } else if(result == "YOU ARE NOT THE HOST") {
         resData = {
@@ -179,3 +181,4 @@ export async function deleteRoom(req, res) {
         res.status(500).json(resData);
     }
 }
+

@@ -1,18 +1,21 @@
-import { useContext, useState } from "react";
+import { useContext, useEffect, useState } from "react";
 import { Member, Room, User } from "../utils/types.js";
 import Loading from "./Loading.js";
 import { ChatAppContext } from "./ChatApp.js";
-import { postRoom } from "../request/room.js";
+import { getLatestMessage, postRoom } from "../request/room.js";
 import { createPopUp } from "../utils/popUp/popUp.js";
 import { sendFile } from "../request/message.js";
 import { updateAvatar, updateUserInformation } from "../request/user.js";
 import { isImage } from "../utils/checkFileType.js";
+import { addNewRoom, addOnMessageReceive, removeOnMessageReceive } from "../request/socket.js";
+import { useCurRoomStore, useRoomListStore, useUserStore } from "./chat-app-store.js";
 
 /*******************************  Sidebar ***************************************/
-import { jsx as _jsx, jsxs as _jsxs } from "react/jsx-runtime";
-export default function Sidebar({
-  roomList
-}) {
+import { jsx as _jsx, jsxs as _jsxs, Fragment as _Fragment } from "react/jsx-runtime";
+export default function Sidebar() {
+  const {
+    roomList
+  } = useRoomListStore.getState();
   const [searchTerm, setSearchTerm] = useState("");
   return /*#__PURE__*/_jsxs("div", {
     children: [/*#__PURE__*/_jsx(SidebarHeader, {}), /*#__PURE__*/_jsx(RoomSearchBar, {
@@ -30,8 +33,9 @@ export default function Sidebar({
  */
 function SidebarHeader() {
   const {
-    user
-  } = useContext(ChatAppContext);
+    user,
+    avatar
+  } = useUserStore(o => o);
   const [showUserInformation, setShowUserInformation] = useState(false);
   const [showAddRoomForm, setShowAddRoomForm] = useState(false);
   return /*#__PURE__*/_jsxs("div", {
@@ -44,7 +48,7 @@ function SidebarHeader() {
       children: [/*#__PURE__*/_jsx("div", {
         className: "avatar-wrapper",
         children: /*#__PURE__*/_jsx("img", {
-          src: user.avatar ? `/file/${user.avatar}/view` : '../images/default-user-avatar.png',
+          src: avatar,
           alt: "User Avatar",
           className: "user-avatar",
           onClick: () => {
@@ -74,7 +78,6 @@ function RoomSearchBar({
 }) {
   function onChange(e) {
     setSearchTerm(e.target.value);
-    console.log(e.target.value);
   }
   return /*#__PURE__*/_jsx("div", {
     className: "room-search-container",
@@ -90,7 +93,7 @@ function RoomSearchBar({
           type: "text",
           name: "room-name",
           className: "search-input",
-          placeholder: "T\xECm ki\u1EBFm tr\xEAn Messenger",
+          placeholder: "Nh\u1EADp t\xEAn ph\xF2ng \u0111\u1EC3 t\xECm ki\u1EBFm",
           onChange: onChange
         })]
       })
@@ -107,7 +110,7 @@ function RoomList({
 }) {
   const {
     roomList
-  } = useContext(ChatAppContext);
+  } = useRoomListStore(o => o);
   return /*#__PURE__*/_jsx("div", {
     className: "room-list-container",
     children: roomList.map((v, i) => {
@@ -126,14 +129,41 @@ function RoomListCard({
   room
 }) {
   const {
+    curRoom,
     setCurRoom
-  } = useContext(ChatAppContext);
-  const latestMessage = {
+  } = useCurRoomStore(o => o);
+  const [latestMessage, setLatestMessage] = useState({
     name: "",
-    message: ""
-  };
+    message: "Phòng mới được tạo",
+    isNew: true
+  });
+  useEffect(() => {
+    function callback(data) {
+      const message = data;
+      message.isNew = true;
+      if (message.roomID == room.roomID) {
+        setLatestMessage(message);
+      }
+    }
+    addOnMessageReceive(callback);
+    getLatestMessage(room.roomID).then(res => {
+      if (res.type == "OK") {
+        setLatestMessage(res.data);
+      }
+    });
+    return () => {
+      removeOnMessageReceive(callback);
+    };
+  }, []);
+  if (curRoom == null) return /*#__PURE__*/_jsx(_Fragment, {});
+  let isCurRoom = "";
+  if (curRoom.roomID == room.roomID) {
+    isCurRoom = "cur-room";
+    latestMessage.isNew = false;
+  }
+  console.log(room.roomID + " " + latestMessage.isNew);
   return /*#__PURE__*/_jsxs("div", {
-    className: "room-card",
+    className: `room-card ${isCurRoom}`,
     onClick: () => {
       setCurRoom(room);
     },
@@ -152,11 +182,11 @@ function RoomListCard({
       }), /*#__PURE__*/_jsxs("div", {
         className: "room-latest-msg",
         children: [/*#__PURE__*/_jsxs("span", {
-          className: "msg-author",
+          className: "msg-author" + (latestMessage.isNew ? " new-message" : ""),
           children: [latestMessage.name, " "]
         }), /*#__PURE__*/_jsx("span", {
-          className: "msg-text",
-          children: latestMessage.message
+          className: "msg-text" + (latestMessage.isNew ? " new-message" : ""),
+          children: ": " + (latestMessage.message ?? latestMessage.file?.name)
         })]
       })]
     })]
@@ -172,16 +202,16 @@ function UserInformationCard({
 }) {
   const {
     user,
-    setReloadRoomList
-  } = useContext(ChatAppContext);
-  const [avatar, setAvatar] = useState(user.avatar ? `/file/${user.avatar}/view` : "../images/default-user-avatar.png");
+    avatar,
+    setAvatar
+  } = useUserStore(o => o);
   function onChangeAvatarClick() {
     const input = document.querySelector("#attach-avatar");
     input.click();
   }
   function onChangeInput(e) {
     if (isImage(e.target.files[0].type)) {
-      setAvatar(URL.createObjectURL(e.target.files[0]));
+      document.querySelector(".user-info-card img").src = URL.createObjectURL(e.target.files[0]);
     } else {
       createPopUp({
         message: "File phải là file ảnh",
@@ -198,6 +228,8 @@ function UserInformationCard({
       if (avatarRes.type != "OK") {
         createPopUp(avatarRes);
         return;
+      } else {
+        setAvatar(`/file/${avatarRes.data.avatar}/view`);
       }
     }
     const userRes = await updateUserInformation(formData.get("username"), formData.get("password"), formData.get("name"));
@@ -209,7 +241,6 @@ function UserInformationCard({
       message: "Bạn đã cập nhật thông tin thành công",
       error: false
     });
-    setReloadRoomList(pre => !pre);
   }
   return /*#__PURE__*/_jsxs("div", {
     className: "user-info-overlay",
@@ -288,14 +319,22 @@ function AddRoomForm({
   setShowAddRoomForm
 }) {
   const {
-    setReloadRoomList
-  } = useContext(ChatAppContext);
+    roomList,
+    setRoomList
+  } = useRoomListStore(o => o);
+  const {
+    curRoom,
+    resetCurRoom
+  } = useCurRoomStore(o => o);
   async function onSubmit() {
     setShowAddRoomForm(false);
     const formData = new FormData(document.querySelector(".add-room-card .user-info-form"));
     const res = await postRoom(formData.get("roomName"));
     if (res.type == "OK") {
-      setReloadRoomList(pre => !pre);
+      // console.log([...roomList, res.data])
+      setRoomList([...roomList, res.data]);
+      addNewRoom(res.data.roomID);
+      if (curRoom == null) resetCurRoom();
     }
     createPopUp(res);
   }

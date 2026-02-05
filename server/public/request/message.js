@@ -1,34 +1,4 @@
-import { FileInformation, ReceivingMessage, SendingMessage, ServerResponse } from "../utils/types.js";
-const socket = new WebSocket(`ws://${window.location.hostname}:3000`);
-socket.onopen = (/** @type {Event}*/ev) => {
-  console.log("Connected To Server");
-};
-export function addOnMessageSocket(setMesageList, setOffset, roomID) {
-  if (roomID != null && roomID != undefined) {
-    socket.onmessage = (/** @type {MessageEvent}*/ev) => {
-      /**@type {ReceivingMessage} */
-      const receivingMessage = JSON.parse(ev.data);
-      if (roomID == receivingMessage.roomID) {
-        setMesageList(pre => [receivingMessage, ...pre]);
-        setOffset(pre => pre + 1);
-      }
-    };
-  }
-}
-
-/**
- * @param {CloseEvent} ev 
- */
-socket.onclose = ev => {
-  console.log(ev.reason);
-};
-
-/**
- * @param {SendingMessage} sendingMessage 
- */
-export function sendMessage(sendingMessage) {
-  socket.send(JSON.stringify(sendingMessage));
-}
+import { ServerResponse } from "../utils/types.js";
 
 /**
  * 

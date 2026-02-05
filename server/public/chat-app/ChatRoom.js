@@ -1,51 +1,45 @@
 import { Room, ReceivingMessage, SendingMessage } from "../utils/types.js";
 import { useContext, useEffect, useRef, useState } from "react";
 import { ChatAppContext } from "./ChatApp.js";
-import { addMember, deleteMember, deleteRoom } from "../request/room.js";
+import { addMember as requestAddMember, deleteMember as requestDeleteMember, deleteRoom } from "../request/room.js";
 import { createPopUp } from "../utils/popUp/popUp.js";
-import { addOnMessageSocket, getFileInformation, getMessageList, sendFile, sendMessage as sendMessageRequest } from "../request/message.js";
-import { getUser } from "../request/user.js";
+import { addOnMessageReceive, removeOnMessageReceive, sendMessage as sendMessageRequest } from "../request/socket.js";
+import { getFileInformation, getMessageList, sendFile } from "../request/message.js";
+import { getUser, leaveRoom } from "../request/user.js";
+import { useCurRoomStore, useRoomListStore, useUserStore } from "./chat-app-store.js";
+import { useMessageListStore } from "./chat-room-store.js";
 
 /**
  * @param {Object} p
  * @param {Room} p.curRoom 
  */
 import { jsx as _jsx, jsxs as _jsxs } from "react/jsx-runtime";
-export default function ChatRoom({
-  curRoom
-}) {
+export default function ChatRoom() {
   /**@type {ReceivingMessage[]} */
-  const [messageList, setMessageList] = useState([]);
-  const [reloadMessageList, setReloadMessageList] = useState(false);
-  const [offset, setOffset] = useState(0);
+  const {
+    curRoom
+  } = useCurRoomStore(o => o);
+  const {
+    addMessage
+  } = useMessageListStore(o => o);
   useEffect(() => {
-    setOffset(0);
-    setMessageList([]);
-    setReloadMessageList(pre => !pre);
-  }, [curRoom]);
-  useEffect(() => {
-    if (curRoom?.roomID) {
-      getMessageList(curRoom.roomID, offset, 20).then(res => {
-        if (res.type === "OK") {
-          setMessageList(prev => [...prev, ...res.data]);
-          setOffset(prev => prev + res.data.length);
-        }
-      });
-    } else {
-      setMessageList([]);
+    function callback(data) {
+      /**@type {ReceivingMessage} */
+      const receivingMessage = data;
+      if (curRoom.roomID == receivingMessage.roomID) {
+        addMessage(receivingMessage);
+      }
     }
-  }, [reloadMessageList]);
-  addOnMessageSocket(setMessageList, setOffset, curRoom?.roomID);
+    addOnMessageReceive(callback);
+    return () => {
+      removeOnMessageReceive(callback);
+    };
+  }, [curRoom?.roomID]);
   if (curRoom == null || curRoom == undefined) {
     return /*#__PURE__*/_jsx("div", {});
   } else {
     return /*#__PURE__*/_jsxs("div", {
-      children: [/*#__PURE__*/_jsx(ChatRoomHeader, {
-        curRoom: curRoom
-      }), /*#__PURE__*/_jsx(MessageList, {
-        messageList: messageList,
-        setReloadMessageList: setReloadMessageList
-      }), /*#__PURE__*/_jsx(MessageInput, {})]
+      children: [/*#__PURE__*/_jsx(ChatRoomHeader, {}), /*#__PURE__*/_jsx(MessageList, {}), /*#__PURE__*/_jsx(MessageInput, {})]
     });
   }
 }
@@ -54,9 +48,10 @@ export default function ChatRoom({
  * @param {Object} p
  * @param {Room} p.curRoom 
  */
-function ChatRoomHeader({
-  curRoom
-}) {
+function ChatRoomHeader() {
+  const {
+    curRoom
+  } = useCurRoomStore(o => o);
   const [showRoomInformation, setShowRoomInformation] = useState(false);
   return /*#__PURE__*/_jsxs("div", {
     className: "chat-room-header",
@@ -78,9 +73,9 @@ function ChatRoomHeader({
           children: curRoom.roomName
         })
       })]
-    }), /*#__PURE__*/_jsx("div", {
+    }), /*#__PURE__*/_jsxs("div", {
       className: "header-right",
-      children: /*#__PURE__*/_jsx("button", {
+      children: [/*#__PURE__*/_jsx(MessageSearchBar, {}), /*#__PURE__*/_jsx("button", {
         className: "btn-room-info",
         onClick: () => {
           setShowRoomInformation(true);
@@ -89,11 +84,36 @@ function ChatRoomHeader({
           src: "/images/room-information-icon.png",
           alt: "Info"
         })
-      })
+      })]
     }), showRoomInformation && /*#__PURE__*/_jsx(RoomInformationCard, {
-      room: curRoom,
       setShowRoomInformation: setShowRoomInformation
     })]
+  });
+}
+function MessageSearchBar() {
+  const setSearchTerm = useMessageListStore(o => o.setSearchTerm);
+  function onChange(e) {
+    setSearchTerm(e.target.value);
+  }
+  return /*#__PURE__*/_jsx("div", {
+    className: "message-search-container",
+    children: /*#__PURE__*/_jsx("form", {
+      className: "search-form",
+      children: /*#__PURE__*/_jsxs("div", {
+        className: "search-input-wrapper",
+        children: [/*#__PURE__*/_jsx("img", {
+          src: "/images/search-bar-icon.png",
+          alt: "search",
+          className: "search-icon"
+        }), /*#__PURE__*/_jsx("input", {
+          type: "text",
+          name: "room-name",
+          className: "search-input",
+          placeholder: "T\xECm ki\u1EBFm tin nh\u1EAFn",
+          onChange: onChange
+        })]
+      })
+    })
   });
 }
 
@@ -102,12 +122,21 @@ function ChatRoomHeader({
  * @param {ReceivingMessage[]} p.messageList
  * @param {funciton(boolean) : void} p.setReloadMessageList
  */
-function MessageList({
-  messageList = [],
-  setReloadMessageList
-}) {
-  const [addMessage, setAddMessage] = useState(false);
+function MessageList() {
+  const {
+    curRoom
+  } = useCurRoomStore(o => o);
+  const {
+    messageList,
+    resetMessageList,
+    loadMessageList,
+    searchTerm
+  } = useMessageListStore(o => o);
   const preScrollHeight = useRef(0);
+  useEffect(() => {
+    resetMessageList();
+    loadMessageList(curRoom?.roomID);
+  }, [curRoom?.roomID]);
   useEffect(() => {
     const list = document.querySelector(".message-list-container");
     if (list != null) {
@@ -117,22 +146,35 @@ function MessageList({
   }, [messageList]);
   const {
     user
-  } = useContext(ChatAppContext);
+  } = useUserStore(o => o);
   function onScroll(e) {
     if (e.target.scrollTop === 0) {
-      setReloadMessageList(pre => !pre);
+      loadMessageList(curRoom.roomID);
     }
   }
   return /*#__PURE__*/_jsx("div", {
     className: "message-list-container",
     onScroll: onScroll,
     children: messageList.slice().reverse().map((v, i) => {
-      const isMe = user.username == v.username;
-      return /*#__PURE__*/_jsx(MessageCard, {
-        message: v,
-        isMe: isMe,
-        isFile: v.fileID != undefined
-      }, v.messageID || i);
+      if (v.file == null) {
+        if (v.message?.includes(searchTerm.toLowerCase())) {
+          const isMe = user.username == v.username;
+          return /*#__PURE__*/_jsx(MessageCard, {
+            message: v,
+            isMe: isMe,
+            isFile: v.fileID != undefined
+          }, v.messageID || i);
+        }
+      } else {
+        if (v.file.name.includes(searchTerm.toLowerCase())) {
+          const isMe = user.username == v.username;
+          return /*#__PURE__*/_jsx(MessageCard, {
+            message: v,
+            isMe: isMe,
+            isFile: v.fileID != undefined
+          }, v.messageID || i);
+        }
+      }
     })
   });
 }
@@ -147,6 +189,7 @@ function MessageCard({
   isMe,
   isFile
 }) {
+  const myAvatar = useUserStore(o => o.avatar);
   const [file, setFile] = useState({
     name: "",
     size: 0,
@@ -177,7 +220,7 @@ function MessageCard({
   return /*#__PURE__*/_jsxs("div", {
     className: `message-wrapper ${isMe ? "me" : "them"}`,
     children: [/*#__PURE__*/_jsx("img", {
-      src: avatar,
+      src: isMe ? myAvatar : avatar,
       alt: "avatar",
       className: "message-avatar",
       title: message.username
@@ -201,10 +244,10 @@ function MessageCard({
               className: "file-attached-info",
               children: [/*#__PURE__*/_jsx("p", {
                 className: "file-attached-name",
-                children: file?.name
+                children: message.file.name
               }), /*#__PURE__*/_jsx("p", {
                 className: "file-attached-size",
-                children: file?.size + " KB"
+                children: message.file.size + " KB"
               })]
             })]
           })
@@ -222,16 +265,17 @@ function MessageInput({
 }) {
   const [showFileAttached, setShowFileAttached] = useState(false);
   const {
-    curRoom,
+    curRoom
+  } = useCurRoomStore(o => o);
+  const {
     user
-  } = useContext(ChatAppContext);
+  } = useUserStore(o => o);
   const [file, setFile] = useState(null);
   function onClickAttachFile() {
     const fileInput = document.querySelector(".message-input-container input");
     fileInput.click();
   }
   function onAttachFile(e) {
-    console.log(e.target.files[0]);
     setFile(e.target.files[0]);
   }
   async function sendMessage(message) {
@@ -262,7 +306,6 @@ function MessageInput({
   }
   function onSendMessage() {
     const textarea = document.querySelector(".message-input-container textarea");
-    console.log("send");
     sendMessage(textarea.value);
     textarea.value = "";
     textarea.rows = 1;
@@ -364,17 +407,32 @@ function FileAttached({
  * @param {function} p.setShowRoomInformation
  */
 function RoomInformationCard({
-  room,
   setShowRoomInformation
 }) {
   const {
-    user,
-    setReloadRoomList
-  } = useContext(ChatAppContext);
+    user
+  } = useUserStore(o => o);
+  const {
+    removeRoom
+  } = useRoomListStore(o => o);
+  const {
+    curRoom,
+    resetCurRoom
+  } = useCurRoomStore(o => o);
   async function onDeleteRoom() {
-    const res = await deleteRoom(room.roomID);
+    const res = await deleteRoom(curRoom.roomID);
     if (res.type == "OK") {
-      setReloadRoomList(pre => !pre);
+      setShowRoomInformation(false);
+      removeRoom(curRoom.roomID);
+      resetCurRoom();
+    }
+    createPopUp(res);
+  }
+  async function onLeaveRoom() {
+    const res = await leaveRoom(user.username, curRoom.roomID);
+    if (res.type == "OK") {
+      removeRoom(curRoom.roomID);
+      resetCurRoom();
       setShowRoomInformation(false);
     }
     createPopUp(res);
@@ -393,19 +451,19 @@ function RoomInformationCard({
           children: [/*#__PURE__*/_jsx("label", {
             children: "T\xEAn Ph\xF2ng:"
           }), /*#__PURE__*/_jsx("span", {
-            children: room.roomName
+            children: curRoom.roomName
           })]
         }), /*#__PURE__*/_jsxs("div", {
           className: "room-info-item",
           children: [/*#__PURE__*/_jsx("label", {
             children: "S\u1ED1 Th\xE0nh Vi\xEAn:"
           }), /*#__PURE__*/_jsx("span", {
-            children: room.memberList?.length || 0
+            children: curRoom.memberList?.length || 0
           })]
         })]
       }), /*#__PURE__*/_jsx(MemberList, {
-        memberList: room.memberList || [],
-        showButton: room.host == user.username
+        memberList: curRoom.memberList || [],
+        showButton: curRoom.host == user.username
       }), /*#__PURE__*/_jsxs("div", {
         className: "user-info-actions",
         children: [/*#__PURE__*/_jsx("button", {
@@ -415,11 +473,16 @@ function RoomInformationCard({
             setShowRoomInformation(false);
           },
           children: " \u0110\xF3ng "
-        }), room.host == user.username && /*#__PURE__*/_jsx("button", {
+        }), curRoom.host == user.username && /*#__PURE__*/_jsx("button", {
           type: "button",
           className: "btn-delete",
           onClick: onDeleteRoom,
           children: "X\xF3a Ph\xF2ng"
+        }), curRoom.host != user.username && /*#__PURE__*/_jsx("button", {
+          type: "button",
+          className: "btn-delete",
+          onClick: onLeaveRoom,
+          children: "R\u1EDDi Ph\xF2ng"
         })]
       })]
     })
@@ -491,15 +554,15 @@ function MemberCard({
 }) {
   const {
     curRoom,
-    setReloadCurRoom
-  } = useContext(ChatAppContext);
+    deleteMember
+  } = useCurRoomStore(o => o);
   const {
     user
-  } = useContext(ChatAppContext);
-  async function onClick() {
-    const res = await deleteMember(curRoom.roomID, member.username);
+  } = useUserStore(o => o);
+  async function onDeleteMember() {
+    const res = await requestDeleteMember(curRoom.roomID, member.username);
     if (res.type == "OK") {
-      setReloadCurRoom(pre => !pre);
+      deleteMember(member.username);
     }
     createPopUp(res);
   }
@@ -519,7 +582,7 @@ function MemberCard({
       children: user.username !== member.username && showButton && /*#__PURE__*/_jsx("button", {
         className: "btn-remove-member",
         title: "X\xF3a th\xE0nh vi\xEAn",
-        onClick: onClick,
+        onClick: onDeleteMember,
         children: "X\xF3a"
       })
     })]
@@ -529,9 +592,8 @@ function AddMemberForm({
   setShowAddMemberForm
 }) {
   const {
-    curRoom,
-    setReloadCurRoom
-  } = useContext(ChatAppContext);
+    curRoom
+  } = useCurRoomStore(o => o);
   async function onKeyDown(e) {
     if (e.key == "Enter") {
       onSubmit();
@@ -541,11 +603,7 @@ function AddMemberForm({
   async function onSubmit() {
     setShowAddMemberForm(false);
     const formData = new FormData(document.querySelector(".add-member-form-container form"));
-    console.log(curRoom.roomID, formData.get("username"));
-    const res = await addMember(curRoom.roomID, formData.get("username"));
-    if (res.type == "OK") {
-      setReloadCurRoom(pre => !pre);
-    }
+    const res = await requestAddMember(curRoom.roomID, formData.get("username"));
     createPopUp(res);
   }
   return /*#__PURE__*/_jsx("div", {

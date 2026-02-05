@@ -31,6 +31,8 @@ export class Room {
   offset;
   /**@type { {message : string, username : string, name : string} } */
   latestMessage;
+  /**@type {number} */
+  avatar;
 }
 export class ServerResponse {
   /**@type {"OK" | "SERVER ERROR" | "REDIRECT" | "BAD REQUEST"} */

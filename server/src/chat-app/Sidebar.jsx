@@ -1,17 +1,20 @@
-import { useContext, useState } from "react"
+import { useContext, useEffect, useState } from "react"
 import {Member, Room, User} from "../utils/types.js"
 
 import Loading from "./Loading.js"
 import { ChatAppContext } from "./ChatApp.js"
-import { postRoom } from "../request/room.js"
+import { getLatestMessage, postRoom } from "../request/room.js"
 import { createPopUp } from "../utils/popUp/popUp.js"
 import { sendFile } from "../request/message.js"
 import { updateAvatar, updateUserInformation } from "../request/user.js"
 import { isImage } from "../utils/checkFileType.js"
+import { addNewRoom, addOnMessageReceive, removeOnMessageReceive } from "../request/socket.js"
+import { useCurRoomStore, useRoomListStore, useUserStore } from "./chat-app-store.js"
 
 /*******************************  Sidebar ***************************************/
 
-export default function Sidebar({roomList}) {
+export default function Sidebar() {
+    const {roomList} = useRoomListStore.getState()
     const [searchTerm, setSearchTerm] = useState("")
     return (
         <div>
@@ -27,7 +30,7 @@ export default function Sidebar({roomList}) {
  * @param {string} p.userAvatar
  */
 function SidebarHeader() {
-    const {user} = useContext(ChatAppContext)
+    const {user, avatar} = useUserStore(o => o)
     const [showUserInformation, setShowUserInformation] = useState(false)
     const [showAddRoomForm, setShowAddRoomForm] = useState(false)
 
@@ -37,7 +40,7 @@ function SidebarHeader() {
             <div className="sidebar-actions">
                 <div className="avatar-wrapper">
                     <img 
-                        src={user.avatar ? `/file/${user.avatar}/view` : '../images/default-user-avatar.png'} 
+                        src={avatar} 
                         alt="User Avatar" 
                         className="user-avatar" 
                         onClick={()=>{setShowUserInformation(true)}}
@@ -56,7 +59,6 @@ function SidebarHeader() {
 function RoomSearchBar({searchTerm, setSearchTerm}) {
     function onChange(e) {
         setSearchTerm(e.target.value)
-        console.log(e.target.value)
     }
     return (
         <div className="room-search-container">
@@ -71,7 +73,7 @@ function RoomSearchBar({searchTerm, setSearchTerm}) {
                         type="text" 
                         name="room-name" 
                         className="search-input"
-                        placeholder="Tìm kiếm trên Messenger"
+                        placeholder="Nhập tên phòng để tìm kiếm"
                         onChange={onChange}
                     />
                 </div>
@@ -85,11 +87,11 @@ function RoomSearchBar({searchTerm, setSearchTerm}) {
  * @param {Room[]} p.roomList
  */
 function RoomList({searchTerm}) {
-    const {roomList} = useContext(ChatAppContext)
+    const {roomList} = useRoomListStore(o => o)
     return (
         <div className="room-list-container">
             {roomList.map((v, i) => {
-                if(v.roomName.includes(searchTerm.toLowerCase())) return <RoomListCard room={v} key={v.roomID} />;
+                if(v.roomName.includes(searchTerm.toLowerCase())) return <RoomListCard room={v} key={v.roomID} />
             })}
         </div>
     );
@@ -100,15 +102,40 @@ function RoomList({searchTerm}) {
  * @param {Room} p.room
  */
 function RoomListCard({room}) {
-    const {setCurRoom} = useContext(ChatAppContext)
+    const {curRoom, setCurRoom} = useCurRoomStore(o => o)
+    const [latestMessage, setLatestMessage] = useState({name : "", message : "Phòng mới được tạo", isNew : true})
+    
+    useEffect(()=>{
+        function callback(data) {
+            const message = data
+            message.isNew = true
+            if(message.roomID == room.roomID) {
+                setLatestMessage(message)
+            }
+        }
+        addOnMessageReceive(callback)
 
-    const latestMessage = {
-        name : "",
-        message : ""
+        getLatestMessage(room.roomID).then((res)=>{
+            if(res.type == "OK"){
+                setLatestMessage(res.data)
+            }
+        })
+
+        return ()=>{
+            removeOnMessageReceive(callback)
+        }
+    }, [])
+
+    if(curRoom == null) return <></>
+
+    let isCurRoom = ""
+    if(curRoom.roomID == room.roomID) {
+        isCurRoom = "cur-room"
+        latestMessage.isNew = false
     }
-
+    console.log(room.roomID +" "+ latestMessage.isNew)
     return (
-        <div className="room-card" onClick={()=>{setCurRoom(room)}}>
+        <div className={`room-card ${isCurRoom}`} onClick={()=>{setCurRoom(room)}}>
             <div className="room-avatar-wrapper">
                 <img src={"/images/default-room-icon.png"} alt="room" className="room-avatar" />
                 {/* <div className="online-indicator"></div> */}
@@ -117,8 +144,9 @@ function RoomListCard({room}) {
             <div className="room-info">
                 <div className="room-name">{room.roomName}</div>
                 <div className="room-latest-msg">
-                    <span className="msg-author">{latestMessage.name} </span>
-                    <span className="msg-text">{latestMessage.message}</span>
+                    <span className={"msg-author" + (latestMessage.isNew ? " new-message" : "")}>{latestMessage.name} </span>
+                    <span className={"msg-text" + (latestMessage.isNew ? " new-message" : "")}>
+                        {": " + (latestMessage.message ?? latestMessage.file?.name)}</span>
                     {/* <span className="msg-time"> • 2 phút</span> */}
                 </div>
             </div>
@@ -131,8 +159,7 @@ function RoomListCard({room}) {
  * @param {function() : void} p.setShowUserInformation
  */
 function UserInformationCard({setShowUserInformation}) {
-    const {user, setReloadRoomList} = useContext(ChatAppContext);
-    const [avatar, setAvatar] = useState((user.avatar ? `/file/${user.avatar}/view` : "../images/default-user-avatar.png"))
+    const {user, avatar, setAvatar} = useUserStore(o => o)
 
     function onChangeAvatarClick() {
         const input = document.querySelector("#attach-avatar")
@@ -141,7 +168,7 @@ function UserInformationCard({setShowUserInformation}) {
 
     function onChangeInput(e) {
         if(isImage(e.target.files[0].type)) {
-            setAvatar(URL.createObjectURL(e.target.files[0]))
+            document.querySelector(".user-info-card img").src = URL.createObjectURL(e.target.files[0])
         } else {
             createPopUp({message : "File phải là file ảnh", error : true})
         }
@@ -156,6 +183,8 @@ function UserInformationCard({setShowUserInformation}) {
             if(avatarRes.type != "OK") {
                 createPopUp(avatarRes)
                 return
+            } else {
+                setAvatar(`/file/${avatarRes.data.avatar}/view`)
             }
         }
         const userRes = await updateUserInformation(formData.get("username"), formData.get("password"), formData.get("name"))
@@ -165,7 +194,6 @@ function UserInformationCard({setShowUserInformation}) {
         }
 
         createPopUp({message : "Bạn đã cập nhật thông tin thành công", error : false})
-        setReloadRoomList(pre=>!pre)
     }
 
     return (
@@ -202,13 +230,17 @@ function UserInformationCard({setShowUserInformation}) {
  * @param {function() : void} p.setShowAddRoomForm
  */
 function AddRoomForm({ setShowAddRoomForm }) {
-    const {setReloadRoomList} = useContext(ChatAppContext)
+    const {roomList, setRoomList} = useRoomListStore(o => o)
+    const {curRoom, resetCurRoom} = useCurRoomStore(o => o)
     async function onSubmit() {
         setShowAddRoomForm(false)
         const formData = new FormData(document.querySelector(".add-room-card .user-info-form"))
         const res = await postRoom(formData.get("roomName"))
         if(res.type == "OK") {
-            setReloadRoomList(pre => !pre)
+            // console.log([...roomList, res.data])
+            setRoomList([...roomList, res.data])
+            addNewRoom(res.data.roomID)
+            if(curRoom == null) resetCurRoom()
         }
         createPopUp(res)
     }
