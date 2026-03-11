@@ -276,6 +276,7 @@ function MessageInput({
     fileInput.click();
   }
   function onAttachFile(e) {
+    console.log("ON ATTACH FILE");
     setFile(e.target.files[0]);
   }
   async function sendMessage(message) {
@@ -299,6 +300,7 @@ function MessageInput({
           fileID: res.data.fileID
         };
         sendMessageRequest(sendingMessage);
+        document.querySelector("#file-input").value = "";
       } else {
         createPopUp(res);
       }
@@ -335,7 +337,8 @@ function MessageInput({
       children: /*#__PURE__*/_jsx("input", {
         type: "file",
         name: "attach",
-        onChange: onAttachFile
+        onChange: onAttachFile,
+        id: "file-input"
       })
     }), file != null && /*#__PURE__*/_jsx(FileAttached, {
       file: file,
@@ -370,6 +373,10 @@ function FileAttached({
   file,
   setFile
 }) {
+  function onClick() {
+    setFile(null);
+    document.querySelector("#file-input").value = "";
+  }
   return /*#__PURE__*/_jsx("div", {
     className: "file-attached-wrapper",
     children: /*#__PURE__*/_jsxs("div", {
@@ -389,9 +396,7 @@ function FileAttached({
         })]
       }), /*#__PURE__*/_jsx("button", {
         className: "btn-remove-file",
-        onClick: () => {
-          setFile(null);
-        },
+        onClick: onClick,
         children: /*#__PURE__*/_jsx("img", {
           src: "/images/remove-attached-file-icon.png",
           alt: "remove"
@@ -443,7 +448,7 @@ function RoomInformationCard({
       className: "room-info-card",
       children: [/*#__PURE__*/_jsx("h3", {
         className: "user-info-title",
-        children: "Th\xF4ng Tin Nh\xF3m"
+        children: "Th\xF4ng Tin Ph\xF2ng"
       }), /*#__PURE__*/_jsxs("div", {
         className: "room-info-details",
         children: [/*#__PURE__*/_jsxs("div", {

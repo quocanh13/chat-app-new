@@ -230,6 +230,7 @@ function MessageInput({setMessageList, setOffset}) {
     }
 
     function onAttachFile(e) {
+        console.log("ON ATTACH FILE")
         setFile(e.target.files[0])
     }
 
@@ -255,6 +256,7 @@ function MessageInput({setMessageList, setOffset}) {
                     fileID : res.data.fileID
                 }
                 sendMessageRequest(sendingMessage)
+                document.querySelector("#file-input").value = "";
             } else {
                 createPopUp(res)
             }
@@ -288,7 +290,7 @@ function MessageInput({setMessageList, setOffset}) {
     return (
         <div className="message-input-container">
             <form action="">
-                <input type="file" name="attach" onChange={onAttachFile}/>
+                <input type="file" name="attach" onChange={onAttachFile} id="file-input"/>
             </form>
             {file != null && <FileAttached file={file} setFile={setFile}/>}
             
@@ -312,6 +314,10 @@ function MessageInput({setMessageList, setOffset}) {
 }
 
 function FileAttached({file, setFile}) {
+    function onClick() {
+        setFile(null)
+        document.querySelector("#file-input").value = "";
+    }
     return (
         <div className="file-attached-wrapper">
             <div className="file-attached-card">
@@ -320,7 +326,7 @@ function FileAttached({file, setFile}) {
                     <p className="file-attached-name">{file.name}</p>
                     <p className="file-attached-size">{file.size + " KB"}</p>
                 </div>
-                <button className="btn-remove-file" onClick={()=>{setFile(null)}}>
+                <button className="btn-remove-file" onClick={onClick}>
                     <img src="/images/remove-attached-file-icon.png" alt="remove" />
                 </button>
             </div>
@@ -362,7 +368,7 @@ function RoomInformationCard({setShowRoomInformation}) {
     return (
         <div className="user-info-overlay">
             <div className="room-info-card">
-                <h3 className="user-info-title">Thông Tin Nhóm</h3>
+                <h3 className="user-info-title">Thông Tin Phòng</h3>
                 
                 <div className="room-info-details">
                     <div className="room-info-item">

@@ -6,7 +6,7 @@ import { getRoomInformation, getRoomList } from "../request/room.js";
 import { createPopUp } from "../utils/popUp/popUp.js";
 
 
-export const useUserStore = create((set)=>{
+export const useUserStore = create((set, get)=>{
     return {
         user : null,
         avatar : "../images/default-user-avatar.png",
@@ -17,7 +17,9 @@ export const useUserStore = create((set)=>{
         loadUser : async ()=>{
             const res = await getUser(getData(cookieParser(document.cookie).token).username)
             if(res.type == "OK") {
-                set({user : res.data, avatar : `/file/${res.data.avatar}/view`})
+                let avatar = get().avatar
+                if(res.data.avatar != null && res.data.avatar != undefined) avatar = `/file/${res.data.avatar}/view`
+                set({user : res.data, avatar})
             } else {
                 createPopUp(res)
             }
@@ -32,19 +34,32 @@ export const useRoomListStore = create((set, get)=>{
 
         setRoomList : (roomList) =>{ set({roomList}) },
 
-        removeRoom : (roomID) => {
+        removeRoom : (roomID, isDeleted = false) => {
             const {curRoom, resetCurRoom} = useCurRoomStore.getState()
             set((state)=> {
-                return {roomList: state.roomList.filter(r => r.roomID != roomID)}
+                return {roomList: state.roomList.filter(r => {
+                    if(isDeleted && r.roomID == roomID) {
+                        createPopUp({
+                            message: `Bạn vừa bị xóa khỏi phòng "${r.roomName}"`,
+                            error: true
+                        })
+                    }
+                    return r.roomID != roomID
+                })}
             })
             if(roomID == curRoom.roomID) resetCurRoom()
         },
 
-        addRoom : async (roomID) => {
+        addRoom : async (roomID, isAdded = false) => {
             const res = await getRoomInformation(roomID)
             if(res.type == "OK") {
-
-                set((state) => {
+                if(isAdded) {
+                    createPopUp({
+                        message: `Bạn vừa được thêm vào phòng "${res.data.roomName}"`,
+                        error: false
+                    })
+                }
+                set((state) => {    
                     return { roomList: [...state.roomList, res.data] } 
                 })
             }

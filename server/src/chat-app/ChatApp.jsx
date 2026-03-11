@@ -19,7 +19,7 @@ export default function ChatApp() {
         initializeState()
 
         async function onAdded(data) {
-            await addRoom(data)
+            await addRoom(data, true)
             if(getLength() == 1) resetCurRoom()
         }
 
@@ -32,13 +32,7 @@ export default function ChatApp() {
         }
 
         function onDeletedMember(roomID) {
-            console.log(roomID)
-            if(roomID == useCurRoomStore.getState().curRoom.roomID) 
-                createPopUp({
-                    message : "Bạn đã bị xóa khỏi phòng",
-                    error : true
-                })
-            removeRoom(roomID)
+            removeRoom(roomID, true)
         }
 
         addOnAdded(onAdded)
